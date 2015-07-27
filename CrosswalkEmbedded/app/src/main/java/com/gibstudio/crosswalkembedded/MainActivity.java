@@ -1,6 +1,8 @@
 package com.gibstudio.crosswalkembedded;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -8,6 +10,9 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.TextureView;
+import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.WebResourceResponse;
 
 import org.xwalk.core.XWalkPreferences;
@@ -36,7 +41,7 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
 
         // preferences
-        XWalkPreferences.setValue(XWalkPreferences.ANIMATABLE_XWALK_VIEW, false);
+        XWalkPreferences.setValue(XWalkPreferences.ANIMATABLE_XWALK_VIEW, true);
 
         // layout
         setContentView(R.layout.activity_main);
@@ -194,7 +199,75 @@ public class MainActivity extends ActionBarActivity {
     }
 
     /**
-     * Example of XWalkResourceClient implemetation
+     * Returns TextureView which is used in XWalkView
+     *
+     * @param group
+     * @return
+     */
+    private TextureView findXWalkTextureView(ViewGroup group) {
+        int childCount = group.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View child = group.getChildAt(i);
+            if (child instanceof TextureView) {
+                String parentClassName = child.getParent().getClass().toString();
+                boolean isRightKindOfParent = (parentClassName.contains("XWalk"));
+                if (isRightKindOfParent) {
+                    return (TextureView) child;
+                }
+            } else if (child instanceof ViewGroup) {
+                TextureView textureView = findXWalkTextureView((ViewGroup) child);
+                if (textureView != null) {
+                    return textureView;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Example of capturing image from XWalkView based on TextureView
+     *
+     * @return
+     */
+    public Bitmap captureImage() {
+        if (mXWalkView != null) {
+            Bitmap bitmap = null;
+
+            boolean isCrosswalk = false;
+            try {
+                Class.forName("org.xwalk.core.XWalkView");
+                isCrosswalk = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if (isCrosswalk) {
+                try {
+                    TextureView textureView = findXWalkTextureView(mXWalkView);
+                    bitmap = textureView.getBitmap();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                bitmap = Bitmap.createBitmap(mXWalkView.getWidth(), mXWalkView.getHeight(), Bitmap.Config.ARGB_8888);
+                Canvas c = new Canvas(bitmap);
+                mXWalkView.draw(c);
+
+//                View view = mXWalkView.getRootView();
+//                view.setDrawingCacheEnabled(true);
+//                bitmap = Bitmap.createBitmap(view.getDrawingCache());
+//                view.setDrawingCacheEnabled(false);
+            }
+
+            return bitmap;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Example of XWalkResourceClient implementation
      */
     class MyResourceClient extends XWalkResourceClient {
         MyResourceClient(XWalkView view) {
