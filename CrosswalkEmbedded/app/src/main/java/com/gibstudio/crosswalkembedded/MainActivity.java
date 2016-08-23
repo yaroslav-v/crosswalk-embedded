@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -29,8 +29,8 @@ import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.util.List;
 
+public class MainActivity extends AppCompatActivity {
 
-public class MainActivity extends ActionBarActivity {
     public static final String TAG = "XWalkViewCallbacks";
 
     private XWalkView mXWalkView;
@@ -270,6 +270,7 @@ public class MainActivity extends ActionBarActivity {
      * Example of XWalkResourceClient implementation
      */
     class MyResourceClient extends XWalkResourceClient {
+
         MyResourceClient(XWalkView view) {
             super(view);
         }
@@ -306,6 +307,7 @@ public class MainActivity extends ActionBarActivity {
      * Example of XWalkUIClient implementation
      */
     class MyUIClient extends XWalkUIClient {
+
         MyUIClient(XWalkView view) {
             super(view);
         }
