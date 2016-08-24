@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.gibstudio.crosswalkembedded"
-        minSdkVersion 14
+        minSdkVersion 16
         targetSdkVersion 23
         versionCode 2
         versionName "2.0"
@@ -66,11 +66,11 @@ repositories {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:23.4.0'
-    debugCompile('org.xwalk:xwalk_core_library:19.49.514.5') {
+    debugCompile('org.xwalk:xwalk_core_library:20.50.533.12') {
         // avoid pulling incorrect version of support library
         exclude group: 'com.android.support', module: 'support-v4'
     }
-    releaseCompile('org.xwalk:xwalk_core_library:19.49.514.5') {
+    releaseCompile('org.xwalk:xwalk_core_library:20.50.533.12') {
         // avoid pulling incorrect version of support library
         exclude group: 'com.android.support', module: 'support-v4'
     }
