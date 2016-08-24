@@ -13,18 +13,16 @@ import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebResourceResponse;
 
+import org.xwalk.core.XWalkCookieManager;
+import org.xwalk.core.XWalkGetBitmapCallback;
 import org.xwalk.core.XWalkPreferences;
 import org.xwalk.core.XWalkResourceClient;
 import org.xwalk.core.XWalkUIClient;
 import org.xwalk.core.XWalkView;
-import org.xwalk.core.internal.XWalkCookieManager;
-import org.xwalk.core.internal.XWalkSettings;
-import org.xwalk.core.internal.XWalkViewBridge;
+import org.xwalk.core.XWalkWebResourceRequest;
+import org.xwalk.core.XWalkWebResourceResponse;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.util.List;
@@ -46,6 +44,15 @@ public class MainActivity extends AppCompatActivity {
         // layout
         setContentView(R.layout.activity_main);
         mXWalkView = (XWalkView) findViewById(R.id.xwalkview);
+
+        // touch listener
+        mXWalkView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                Log.w(TAG, "onTouch: " + motionEvent);
+                return false;
+            }
+        });
 
         // listeners
         mXWalkView.setResourceClient(new MyResourceClient(mXWalkView));
@@ -125,24 +132,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean dispatchKeyEvent(KeyEvent event) {
-        if (event.getAction() == KeyEvent.ACTION_UP &&
-                event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
-            Log.i(TAG, "dispatchKeyEvent: " + event.getKeyCode());
-        }
+    public void onBackPressed() {
+        Log.w(TAG, "onBackPressed");
 
-        return super.dispatchKeyEvent(event);
-    }
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_UP:
-                Log.i(TAG, "dispatchTouchEvent: " + event.getAction());
-                break;
-        }
-
-        return super.dispatchTouchEvent(event);
+        super.onBackPressed();
     }
 
     /**
@@ -174,28 +167,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Example of XWalkSettings obtaining through reflection
+     * Returns default User-Agent
      *
      * @param webView
      * @return XWalkView default User-Agent
      */
     private String getXWalkViewUserAgent(XWalkView webView) {
-        try {
-            Method ___getBridge = XWalkView.class.getDeclaredMethod("getBridge");
-            ___getBridge.setAccessible(true);
-            XWalkViewBridge xWalkViewBridge = null;
-            xWalkViewBridge = (XWalkViewBridge) ___getBridge.invoke(webView);
-            XWalkSettings xWalkSettings = xWalkViewBridge.getSettings();
-            return xWalkSettings.getUserAgentString();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-        return null;
+//        return webView.getSettings().getUserAgentString();
+        return webView.getUserAgentString();
     }
 
     /**
@@ -227,9 +206,12 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Example of capturing image from XWalkView based on TextureView
+     * <br/><br/>
+     * Use XWalkView.captureBitmapAsync(XWalkGetBitmapCallback callback) instead of this method
      *
-     * @return
+     * @return Image of view's content
      */
+    @Deprecated
     public Bitmap captureImage() {
         if (mXWalkView != null) {
             Bitmap bitmap = null;
@@ -250,14 +232,10 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             } else {
-                bitmap = Bitmap.createBitmap(mXWalkView.getWidth(), mXWalkView.getHeight(), Bitmap.Config.ARGB_8888);
+                bitmap = Bitmap.createBitmap(mXWalkView.getWidth(), mXWalkView.getHeight(),
+                        Bitmap.Config.ARGB_8888);
                 Canvas c = new Canvas(bitmap);
                 mXWalkView.draw(c);
-
-//                View view = mXWalkView.getRootView();
-//                view.setDrawingCacheEnabled(true);
-//                bitmap = Bitmap.createBitmap(view.getDrawingCache());
-//                view.setDrawingCacheEnabled(false);
             }
 
             return bitmap;
@@ -277,29 +255,31 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onLoadStarted(XWalkView view, String url) {
-            Log.i(TAG, "onLoadStarted: " + url);
+            Log.w(TAG, "onLoadStarted: " + url);
         }
 
         @Override
         public void onLoadFinished(XWalkView view, String url) {
-            Log.i(TAG, "onLoadFinished: " + url);
+            Log.w(TAG, "onLoadFinished: " + url);
         }
 
         @Override
         public void onProgressChanged(XWalkView view, int newProgress) {
-            Log.i(TAG, "onProgressChanged: " + newProgress);
+            Log.w(TAG, "onProgressChanged: " + newProgress);
         }
 
         @Override
         public boolean shouldOverrideUrlLoading(XWalkView view, String url) {
-            Log.i(TAG, "shouldOverrideUrlLoading: " + url);
+            Log.w(TAG, "shouldOverrideUrlLoading: " + url);
             return super.shouldOverrideUrlLoading(view, url);
         }
 
         @Override
-        public WebResourceResponse shouldInterceptLoadRequest(XWalkView view, String url) {
-            Log.i(TAG, "shouldInterceptLoadRequest: " + url);
-            return super.shouldInterceptLoadRequest(view, url);
+        public XWalkWebResourceResponse shouldInterceptLoadRequest(XWalkView view,
+                                                                   XWalkWebResourceRequest request) {
+            Log.w(TAG, "shouldInterceptLoadRequest: url: " + request.getUrl()
+                    + ", method: " + request.getMethod());
+            return super.shouldInterceptLoadRequest(view, request);
         }
     }
 
@@ -314,13 +294,21 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onPageLoadStarted(XWalkView view, java.lang.String url) {
-            Log.i(TAG, "onPageLoadStarted: " + url);
+            Log.w(TAG, "onPageLoadStarted: " + url);
         }
 
         @Override
         public void onPageLoadStopped(XWalkView view, String url, LoadStatus status) {
-            Log.i(TAG, "onPageLoadStopped: " + url + ", status: " + status);
+            Log.w(TAG, "onPageLoadStopped: " + url + ", status: " + status);
+
+            if (status == LoadStatus.FINISHED) {
+                view.captureBitmapAsync(new XWalkGetBitmapCallback() {
+                    @Override
+                    public void onFinishGetBitmap(Bitmap bitmap, int i) {
+                        Log.w(TAG, "onFinishGetBitmap: " + bitmap);
+                    }
+                });
+            }
         }
     }
-
 }

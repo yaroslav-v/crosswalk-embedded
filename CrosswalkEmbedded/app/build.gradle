@@ -12,10 +12,21 @@ android {
         versionName "2.0"
     }
     buildTypes {
-        release {
+        debug {
             minifyEnabled false
+        }
+        release {
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        liteDebug {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+//        liteRelease {
+//            minifyEnabled true
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//        }
     }
     productFlavors {
         armv7 {
@@ -47,10 +58,21 @@ repositories {
     maven {
         url 'https://download.01.org/crosswalk/releases/crosswalk/android/maven2'
     }
+    maven {
+        url 'https://download.01.org/crosswalk/releases/crosswalk-lite/android/maven2'
+    }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:23.4.0'
-    compile 'org.xwalk:xwalk_core_library:14.43.343.17'
+    debugCompile('org.xwalk:xwalk_core_library:19.49.514.5') {
+        // avoid pulling incorrect version of support library
+        exclude group: 'com.android.support', module: 'support-v4'
+    }
+    releaseCompile('org.xwalk:xwalk_core_library:19.49.514.5') {
+        // avoid pulling incorrect version of support library
+        exclude group: 'com.android.support', module: 'support-v4'
+    }
+    liteDebugCompile('org.xwalk:xwalk_core_library_canary:17.46.460.1')
 }
