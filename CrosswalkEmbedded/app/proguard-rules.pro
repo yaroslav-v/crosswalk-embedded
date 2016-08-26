@@ -24,3 +24,5 @@
     *;
 }
 -keepattributes **
+
+-dontwarn org.chromium.base.**
